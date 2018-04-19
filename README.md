@@ -16,13 +16,28 @@ int main (int argc, char* argv[])
     auto inFile     = File::getSpecialLocation (File::userHomeDirectory).getChildFile ("testfile.txt");
     auto outFile    = File::getSpecialLocation (File::userHomeDirectory).getChildFile ("testfile.crypt");
     auto checkFile  = File::getSpecialLocation (File::userHomeDirectory).getChildFile ("testfile.check");
-    FileOutputStream output (outFile);
-    FFAU::RSAEncryptionStream encryptStream (output, privateKey, keySize / 8);
 
-    FileInputStream input (inFile);
+    outFile.deleteFile();
+    checkFile.deleteFile();
 
-    while (!input.isExhausted()) {
-        encryptStream.writeByte (input.readByte());
+    {
+        FileOutputStream output (outFile);
+        FFAU::RSAEncryptionStream encryptStream (output, privateKey, keySize / 8);
+
+        FileInputStream input (inFile);
+
+        while (!input.isExhausted())
+            encryptStream.writeByte (input.readByte());
+    }
+
+    {
+        FileInputStream input (outFile);
+        FFAU::RSADecryptionStream decryptStream (input, publicKey, keySize / 8);
+
+        FileOutputStream output (checkFile);
+
+        while (!decryptStream.isExhausted())
+            output.writeByte (decryptStream.readByte());
     }
 
     return 0;
