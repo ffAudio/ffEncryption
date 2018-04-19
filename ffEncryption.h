@@ -29,7 +29,7 @@
  BEGIN_JUCE_MODULE_DECLARATION
 
  ID:            ffEncryption
- vendor:        Foleys Finest Audio UG / Filmstro Ltd.
+ vendor:        Foleys Finest Audio UG
  version:       0.9.0
  name:          Encryption and decryption streams
  description:   Encryption and decryption streams using juce's RSAKey
@@ -57,9 +57,11 @@
 
 namespace FFAU
 {
-    
+
 #include "RSADeryptionStream.h"
 #include "RSAEnryptionStream.h"
+#include "XorDeryptionStream.h"
+#include "XorEnryptionStream.h"
 
 }
 
