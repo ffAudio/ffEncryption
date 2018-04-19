@@ -13,6 +13,7 @@ public:
     : input   (readStream),
     secret    (key)
     {
+        jassert (key.size() > 0);
     }
 
     virtual ~XorDecryptionStream () {}
@@ -30,9 +31,18 @@ public:
     int read (void *destBuffer, int maxBytesToRead) override
     {
         juce::MemoryBlock block (maxBytesToRead);
-        auto readBytes = input.read (destBuffer, maxBytesToRead);
+        auto readBytes = input.read (block.getData(), maxBytesToRead);
         // apply the secret XORed, make sure to start at the right position in the secret
+        auto keyPos = input.getPosition() % secret.size();
 
+        auto* ptr   = (char*)destBuffer;
+        for (int i=0; i < block.getSize(); ++i) {
+            *ptr ^= secret [keyPos];
+            ++ptr;
+            if (++keyPos >= secret.size()) {
+                keyPos = 0;
+            }
+        }
 
         return readBytes;
     }

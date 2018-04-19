@@ -14,6 +14,7 @@ public:
     : output  (destStream),
     secret    (key)
     {
+        jassert (key.size() > 0);
     }
 
     virtual ~XorEncryptionStream () {}
@@ -24,7 +25,6 @@ public:
 
     bool setPosition (juce::int64 newPosition) override
     {
-        flush();
         return output.setPosition (newPosition);
     }
 
@@ -38,6 +38,15 @@ public:
         juce::MemoryBlock block (dataToWrite, numberOfBytes);
 
         // apply the secret XORed, make sure to start at the right position in the secret
+        auto keyPos = output.getPosition() % secret.size();
+        auto* ptr   = (char*)block.getData();
+        for (int i=0; i < numberOfBytes; ++i) {
+            *ptr ^= secret [keyPos];
+            ++ptr;
+            if (++keyPos >= secret.size()) {
+                keyPos = 0;
+            }
+        }
 
         return output.write (block.getData(), block.getSize());
     }
