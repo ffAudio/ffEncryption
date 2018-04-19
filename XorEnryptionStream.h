@@ -35,14 +35,14 @@ public:
 
     bool write (const void *dataToWrite, size_t numberOfBytes) override
     {
+        auto keyPos = output.getPosition() % secret.size();
         juce::MemoryBlock block (dataToWrite, numberOfBytes);
 
         // apply the secret XORed, make sure to start at the right position in the secret
-        auto keyPos = output.getPosition() % secret.size();
         auto* ptr   = (char*)block.getData();
+
         for (int i=0; i < numberOfBytes; ++i) {
-            *ptr ^= secret [keyPos];
-            ++ptr;
+            ptr[i] ^= secret [keyPos];
             if (++keyPos >= secret.size()) {
                 keyPos = 0;
             }

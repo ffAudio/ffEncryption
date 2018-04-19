@@ -30,15 +30,17 @@ public:
 
     int read (void *destBuffer, int maxBytesToRead) override
     {
+        auto keyPos = input.getPosition() % secret.size();
+
         juce::MemoryBlock block (maxBytesToRead);
         auto readBytes = input.read (block.getData(), maxBytesToRead);
         // apply the secret XORed, make sure to start at the right position in the secret
-        auto keyPos = input.getPosition() % secret.size();
 
-        auto* ptr   = (char*)destBuffer;
-        for (int i=0; i < block.getSize(); ++i) {
-            *ptr ^= secret [keyPos];
-            ++ptr;
+        auto* inptr  = (char*)block.getData();
+        auto* outptr = (char*)destBuffer;
+
+        for (int i=0; i < maxBytesToRead; ++i) {
+            outptr[i] = inptr[i] ^ secret [keyPos];
             if (++keyPos >= secret.size()) {
                 keyPos = 0;
             }
