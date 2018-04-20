@@ -27,7 +27,8 @@ public:
         auto  pos = 0;
         auto  bytesNeeded = maxBytesToRead;
         while (bytesNeeded > 0) {
-            if (position < decodedPosition ||
+            if (decodedBlock.getSize() <= 0 ||
+                position < decodedPosition ||
                 position >= decodedPosition + decodedBlock.getSize()) {
                 decodedPosition = position -  position % blockSize;
                 decodedBlock.setSize (blockSize);
