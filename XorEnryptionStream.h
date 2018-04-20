@@ -42,7 +42,8 @@ public:
         auto* ptr   = (char*)block.getData();
 
         for (int i=0; i < numberOfBytes; ++i) {
-            ptr[i] ^= secret [keyPos];
+            *ptr ^= secret [keyPos];
+            ++ptr;
             if (++keyPos >= secret.size()) {
                 keyPos = 0;
             }
