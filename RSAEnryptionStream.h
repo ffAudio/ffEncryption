@@ -15,20 +15,25 @@ public:
 
     void flush () override
     {
-        jassert (output.getPosition() % blockSize == 0);
+        jassert (output.getPosition() % blockSize == padded);
 
         juce::BigInteger block;
         block.loadFromMemoryBlock (blockToEncrypt);
         rsaKey.applyToValue (block);
         auto encodedBlock = block.toMemoryBlock();
-        output.write (encodedBlock.getData(), encodedBlock.getSize());
+        auto* ptr = (char*)encodedBlock.getData();
+        ptr += padded;
+        output.write (ptr, encodedBlock.getSize() - padded);
 
         blockToEncrypt.reset();
+        padded = output.getPosition() % blockSize;
     }
 
     bool setPosition (juce::int64 newPosition) override
     {
         flush();
+        padded = newPosition % blockSize;
+        blockToEncrypt.setSize (padded, true);
         return output.setPosition (newPosition);
     }
 
@@ -62,5 +67,6 @@ private:
     juce::RSAKey        rsaKey;
     int                 blockSize;
     juce::MemoryBlock   blockToEncrypt;
+    int                 padded = 0;
 };
 
