@@ -18,35 +18,66 @@ public:
 
     bool isExhausted () override
     {
-        return input.isExhausted();
+        return position >= input.getTotalLength();
     }
 
     int read (void *destBuffer, int maxBytesToRead) override
     {
-        // TODO: read and decrypt
+        auto* writePos = (char*)destBuffer;
+        auto  pos = 0;
+        auto  bytesNeeded = maxBytesToRead;
+        while (bytesNeeded > 0) {
+            if (position < decodedPosition ||
+                position >= decodedPosition + decodedBlock.getSize()) {
+                decodedPosition = position -  position % blockSize;
+                decodedBlock.setSize (blockSize);
+                input.setPosition (decodedPosition);
+                auto readBytes = input.read (decodedBlock.getData(), decodedBlock.getSize());
+                decodedBlock.setSize (readBytes);
+                juce::BigInteger crypted;
+                crypted.loadFromMemoryBlock (decodedBlock);
+                rsaKey.applyToValue (crypted);
+                decodedBlock = crypted.toMemoryBlock();
+            }
 
+            auto localPos = position - decodedPosition;
+            auto bytesToCopy = std::min ((int)(decodedBlock.getSize() - localPos), bytesNeeded);
+            memcpy (writePos, (char*)decodedBlock.getData() + localPos, bytesToCopy);
+            writePos    += bytesToCopy;
+            bytesNeeded -= bytesToCopy;
+            position    += bytesToCopy;
+        }
 
-        return input.read (destBuffer, maxBytesToRead);
+        return maxBytesToRead;
     }
 
     juce::int64 getPosition () override
     {
-        return input.getPosition();
+        return position;
     }
 
     bool setPosition (juce::int64 newPosition) override
     {
-        decodedPosition = -1;
-        return input.setPosition (newPosition);
+        if (newPosition < input.getTotalLength()) {
+            position = newPosition;
+            return true;
+        }
+
+        position = input.getTotalLength();
+        return false;
     }
 
 private:
+
+    void decryptBlock (juce::int64 position);
+
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (RSADecryptionStream)
 
     juce::InputStream& input;
     juce::RSAKey       rsaKey;
     int                blockSize;
+    juce::int64        position = 0;
     juce::int64        decodedPosition = -1;
     juce::MemoryBlock  decodedBlock;
 };
