@@ -1,6 +1,9 @@
 # ffEncryption
 
 This module adds an encrypt and decrypt stream to intercept any kind of reading.
+
+Note: *RSAEncryptionStream is work in progress, it doesn't work yet*
+
 Here is the test program:
 
 ```
