@@ -10,12 +10,17 @@ public:
     rsaKey    (key),
     blockSize (keySize)
     {
+    }
 
+    virtual ~RSAEncryptionStream ()
+    {
+        flush();
     }
 
     void flush () override
     {
         jassert (output.getPosition() % blockSize == padded);
+        jassert (blockToEncrypt.getSize() <= blockSize);
 
         juce::BigInteger block;
         block.loadFromMemoryBlock (blockToEncrypt);
@@ -25,8 +30,10 @@ public:
         ptr += padded;
         output.write (ptr, encodedBlock.getSize() - padded);
 
+        jassert (encodedBlock.getSize() < std::numeric_limits<int>::max());
+        padded = static_cast<int> (blockSize - blockToEncrypt.getSize());
+
         blockToEncrypt.reset();
-        padded = output.getPosition() % blockSize;
     }
 
     bool setPosition (juce::int64 newPosition) override
